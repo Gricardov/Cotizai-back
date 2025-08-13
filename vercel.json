@@ -12,10 +12,5 @@
       "dest": "dist/main.js"
     }
   ],
-  "functions": {
-    "dist/main.js": {
-      "maxDuration": 30
-    }
-  },
   "buildCommand": "npm run build"
 } 
