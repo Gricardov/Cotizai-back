@@ -4,7 +4,7 @@
   "private": true,
   "main": "dist/main.js",
   "scripts": {
-    "build": "tsc --project tsconfig.app.json",
+    "build": "tsc --project tsconfig.app.json && echo 'Build completed successfully'",
     "build:vercel": "tsc --project tsconfig.vercel.json --noEmitOnError false --skipLibCheck true || echo 'Build completed with warnings'",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "node dist/main.js",

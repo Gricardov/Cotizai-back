@@ -1,3 +1,40 @@
-const app = require('../dist/main.js').default;
+let app;
 
+try {
+  // Try to load the compiled Express app
+  const mainModule = require('../dist/main.js');
+  app = mainModule.default;
+} catch (error) {
+  console.error('Error loading app from dist/main.js:', error);
+  
+  // Fallback: create a basic Express app
+  const express = require('express');
+  const cors = require('cors');
+  
+  app = express();
+  
+  app.use(cors({
+    origin: '*',
+    credentials: true,
+  }));
+  app.use(express.json());
+  
+  // Basic health check
+  app.get('/', (req, res) => {
+    res.json({ 
+      message: 'CotizAI API is running (fallback mode)',
+      error: 'Build files not found, using fallback server'
+    });
+  });
+  
+  // Catch-all route
+  app.all('*', (req, res) => {
+    res.status(404).json({ 
+      error: 'Endpoint not found',
+      message: 'Build files not available, please check deployment'
+    });
+  });
+}
+
+// Export the Express app directly for Vercel
 module.exports = app; 
