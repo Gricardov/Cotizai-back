@@ -5,8 +5,7 @@
       "src": "api/index.js",
       "use": "@vercel/node",
       "config": {
-        "nodeVersion": "22.x",
-        "includeFiles": ["dist/**"]
+        "nodeVersion": "22.x"
       }
     }
   ],
@@ -16,5 +15,6 @@
       "dest": "api/index.js"
     }
   ],
-  "buildCommand": "npm run build"
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist"
 }
