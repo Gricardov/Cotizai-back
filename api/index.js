@@ -128,15 +128,6 @@ app.post('/analizar-estructura-web', async (req, res) => {
   }
 });
 
-// Handle 404
-app.use('*', (req, res) => {
-  res.status(404).json({
-    error: 'Endpoint not found',
-    message: `The endpoint ${req.method} ${req.originalUrl} does not exist`,
-    timestamp: new Date().toISOString()
-  });
-});
-
 // Error handling middleware
 app.use((error, req, res, next) => {
   console.error('Unhandled error:', error);
