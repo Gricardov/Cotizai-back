@@ -1,15 +1,27 @@
-import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { User, UserRole } from '../entities/user.entity';
-import * as bcrypt from 'bcryptjs';
+import bcrypt from 'bcryptjs';
 
-@Injectable()
+export enum UserRole {
+  ADMIN = 'admin',
+  COTIZADOR = 'cotizador'
+}
+
+export interface User {
+  id: number;
+  nombre: string;
+  username: string;
+  password: string;
+  rol: UserRole;
+  area: string;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
 export class UserService {
-  constructor(
-    @InjectRepository(User)
-    private userRepository: Repository<User>,
-  ) {}
+  private users: User[] = [];
+
+  constructor() {
+    this.initializeDefaultUsers();
+  }
 
   async createUser(userData: {
     nombre: string;
@@ -20,16 +32,20 @@ export class UserService {
   }): Promise<User> {
     const hashedPassword = await bcrypt.hash(userData.password, 10);
     
-    const user = this.userRepository.create({
+    const user: User = {
+      id: this.users.length + 1,
       ...userData,
       password: hashedPassword,
-    });
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
 
-    return await this.userRepository.save(user);
+    this.users.push(user);
+    return user;
   }
 
   async findByUsername(username: string): Promise<User | null> {
-    return await this.userRepository.findOne({ where: { username } });
+    return this.users.find(user => user.username === username) || null;
   }
 
   async validateUser(username: string, password: string): Promise<User | null> {
@@ -41,21 +57,32 @@ export class UserService {
   }
 
   async getAllUsers(): Promise<User[]> {
-    return await this.userRepository.find();
+    return this.users;
   }
 
   async getUserById(id: number): Promise<User | null> {
-    return await this.userRepository.findOne({ where: { id } });
+    return this.users.find(user => user.id === id) || null;
   }
 
   async updateUser(id: number, userData: Partial<User>): Promise<User | null> {
-    await this.userRepository.update(id, userData);
-    return await this.getUserById(id);
+    const userIndex = this.users.findIndex(user => user.id === id);
+    if (userIndex === -1) return null;
+
+    this.users[userIndex] = {
+      ...this.users[userIndex],
+      ...userData,
+      updatedAt: new Date()
+    };
+
+    return this.users[userIndex];
   }
 
   async deleteUser(id: number): Promise<boolean> {
-    const result = await this.userRepository.delete(id);
-    return result.affected ? result.affected > 0 : false;
+    const userIndex = this.users.findIndex(user => user.id === id);
+    if (userIndex === -1) return false;
+
+    this.users.splice(userIndex, 1);
+    return true;
   }
 
   // Método para inicializar usuarios por defecto

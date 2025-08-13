@@ -1,7 +1,5 @@
-import { Injectable } from '@nestjs/common';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
-@Injectable()
 export class AITimeAnalyzerService {
   private genAI: GoogleGenerativeAI;
 

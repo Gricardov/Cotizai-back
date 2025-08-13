@@ -1,14 +1,28 @@
-import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, IsNull, Not } from 'typeorm';
-import { Operacion, OperacionEstado } from '../entities/operacion.entity';
+export enum OperacionEstado {
+  EN_REVISION = 'en_revision',
+  APROBADO = 'aprobado',
+  DESESTIMADO = 'desestimado'
+}
 
-@Injectable()
+export interface Operacion {
+  id: number;
+  nombre: string;
+  fecha: Date;
+  estado: OperacionEstado;
+  userId: number;
+  area: string;
+  data?: any;
+  createdAt?: Date;
+  updatedAt?: Date;
+  user?: any;
+}
+
 export class OperacionService {
-  constructor(
-    @InjectRepository(Operacion)
-    private operacionRepository: Repository<Operacion>,
-  ) {}
+  private operaciones: Operacion[] = [];
+
+  constructor() {
+    this.initializeSampleOperaciones();
+  }
 
   async createOperacion(operacionData: {
     nombre: string;
@@ -18,8 +32,15 @@ export class OperacionService {
     area: string;
     data?: any;
   }): Promise<Operacion> {
-    const operacion = this.operacionRepository.create(operacionData);
-    return await this.operacionRepository.save(operacion);
+    const operacion: Operacion = {
+      id: this.operaciones.length + 1,
+      ...operacionData,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+
+    this.operaciones.push(operacion);
+    return operacion;
   }
 
   async createCotizacion(operacionData: {
@@ -28,49 +49,60 @@ export class OperacionService {
     area: string;
     data: any;
   }): Promise<Operacion> {
-    const operacion = this.operacionRepository.create({
+    const operacion: Operacion = {
+      id: this.operaciones.length + 1,
       ...operacionData,
       fecha: new Date(),
-      estado: OperacionEstado.EN_REVISION
-    });
-    return await this.operacionRepository.save(operacion);
+      estado: OperacionEstado.EN_REVISION,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+
+    this.operaciones.push(operacion);
+    return operacion;
   }
 
   async getAllOperaciones(): Promise<Operacion[]> {
-    return await this.operacionRepository.find({
-      relations: ['user'],
-      order: { createdAt: 'DESC' }
-    });
+    return this.operaciones.sort((a, b) => 
+      new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
+    );
   }
 
   async getOperacionesByUserId(userId: number): Promise<Operacion[]> {
-    return await this.operacionRepository.find({
-      where: { userId },
-      relations: ['user'],
-      order: { createdAt: 'DESC' }
-    });
+    return this.operaciones
+      .filter(op => op.userId === userId)
+      .sort((a, b) => 
+        new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
+      );
   }
 
   async getOperacionById(id: number): Promise<Operacion | null> {
-    return await this.operacionRepository.findOne({ 
-      where: { id },
-      relations: ['user']
-    });
+    return this.operaciones.find(op => op.id === id) || null;
   }
 
   async updateOperacion(id: number, operacionData: Partial<Operacion>): Promise<Operacion | null> {
-    await this.operacionRepository.update(id, operacionData);
-    return await this.getOperacionById(id);
+    const operacionIndex = this.operaciones.findIndex(op => op.id === id);
+    if (operacionIndex === -1) return null;
+
+    this.operaciones[operacionIndex] = {
+      ...this.operaciones[operacionIndex],
+      ...operacionData,
+      updatedAt: new Date()
+    };
+
+    return this.operaciones[operacionIndex];
   }
 
   async deleteOperacion(id: number): Promise<boolean> {
-    const result = await this.operacionRepository.delete(id);
-    return result.affected ? result.affected > 0 : false;
+    const operacionIndex = this.operaciones.findIndex(op => op.id === id);
+    if (operacionIndex === -1) return false;
+
+    this.operaciones.splice(operacionIndex, 1);
+    return true;
   }
 
   async updateOperacionEstado(id: number, estado: OperacionEstado): Promise<Operacion | null> {
-    await this.operacionRepository.update(id, { estado });
-    return await this.getOperacionById(id);
+    return this.updateOperacion(id, { estado });
   }
 
   async getOperacionesConPaginacion(
@@ -84,28 +116,23 @@ export class OperacionService {
     totalPaginas: number;
     paginaActual: number;
   }> {
-    const skip = (pagina - 1) * porPagina;
-    
-    // Construir query base - permitir ver todas las operaciones
-    let query = this.operacionRepository.createQueryBuilder('operacion')
-      .leftJoinAndSelect('operacion.user', 'user')
-      .orderBy('operacion.createdAt', 'DESC');
+    let filteredOperaciones = this.operaciones;
 
     // Aplicar filtro por área si no es 'todas'
     if (area !== 'todas') {
-      query = query.where('operacion.area = :area', { area });
+      filteredOperaciones = filteredOperaciones.filter(op => op.area === area);
     }
 
-    // Obtener total de operaciones
-    const totalOperaciones = await query.getCount();
+    // Ordenar por fecha de creación descendente
+    filteredOperaciones.sort((a, b) => 
+      new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
+    );
 
-    // Obtener operaciones paginadas
-    const operaciones = await query
-      .skip(skip)
-      .take(porPagina)
-      .getMany();
-
+    const totalOperaciones = filteredOperaciones.length;
     const totalPaginas = Math.ceil(totalOperaciones / porPagina);
+    const skip = (pagina - 1) * porPagina;
+
+    const operaciones = filteredOperaciones.slice(skip, skip + porPagina);
 
     return {
       operaciones,
@@ -117,21 +144,15 @@ export class OperacionService {
 
   async getAreasUnicas(): Promise<string[]> {
     try {
-      // Consulta simple para obtener todas las operaciones
-      const operaciones = await this.operacionRepository.find();
-      
-      // Extraer áreas únicas
       const areasSet = new Set<string>();
-      operaciones.forEach(op => {
+      this.operaciones.forEach(op => {
         if (op.area && op.area.trim() !== '') {
           areasSet.add(op.area);
         }
       });
       
-      // Convertir a array y ordenar
       const areas = Array.from(areasSet).sort();
       
-      // Si no hay áreas, retornar las por defecto
       if (areas.length === 0) {
         return ['Comercial', 'Marketing', 'TI', 'Administración', 'Medios'];
       }
@@ -139,7 +160,6 @@ export class OperacionService {
       return areas;
     } catch (error) {
       console.error('Error getting areas:', error);
-      // Retornar áreas por defecto si hay error
       return ['Comercial', 'Marketing', 'TI', 'Administración', 'Medios'];
     }
   }
@@ -174,12 +194,9 @@ export class OperacionService {
     ];
 
     for (const operacionData of operaciones) {
-      const existingOperacion = await this.operacionRepository.findOne({
-        where: { nombre: operacionData.nombre }
-      });
-
+      const existingOperacion = this.operaciones.find(op => op.nombre === operacionData.nombre);
       if (!existingOperacion) {
-        await this.operacionRepository.save(operacionData);
+        await this.createOperacion(operacionData);
       }
     }
   }

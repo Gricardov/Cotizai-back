@@ -1,4 +1,3 @@
-import { Injectable } from '@nestjs/common';
 import axios from 'axios';
 import * as cheerio from 'cheerio';
 
@@ -43,7 +42,6 @@ interface AnalysisResult {
   detailed_analysis: string;
 }
 
-@Injectable()
 export class WebCrawlerService {
   private readonly EXPECTED_PAGES: Record<string, Record<string, string[]>> = {
     'Inmobiliario': {
@@ -495,7 +493,7 @@ Una renovación integral del sitio web, enfocada en las necesidades específicas
 La implementación de las páginas faltantes y las mejoras recomendadas posicionará su sitio web como una herramienta competitiva y efectiva para el crecimiento de su negocio.`;
   }
 
-  private generateFallbackAnalysis(request: CrawlAnalysisRequest): AnalysisResult {
+  generateFallbackAnalysis(request: CrawlAnalysisRequest): AnalysisResult {
     const expectedPages = this.EXPECTED_PAGES[request.rubro]?.[request.servicio] || [];
     
     return {

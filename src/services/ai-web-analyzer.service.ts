@@ -1,4 +1,3 @@
-import { Injectable } from '@nestjs/common';
 import axios from 'axios';
 import * as cheerio from 'cheerio';
 import { GoogleGenerativeAI } from '@google/generative-ai';
@@ -28,7 +27,6 @@ interface AIAnalysisRequest {
   tipo: string;
 }
 
-@Injectable()
 export class AIWebAnalyzerService {
   private readonly genAI: GoogleGenerativeAI;
 
