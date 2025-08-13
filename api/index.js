@@ -1,5 +1,13 @@
 const { NestFactory } = require('@nestjs/core');
-const { AppModule } = require('../dist/app/app.module');
+
+// Import the compiled module with error handling
+let AppModule;
+try {
+  AppModule = require('../dist/app/app.module').AppModule;
+} catch (error) {
+  console.error('Failed to import AppModule:', error);
+  throw error;
+}
 
 let app;
 
@@ -18,6 +26,11 @@ async function bootstrap() {
       console.log('NestJS app initialized successfully');
     } catch (error) {
       console.error('Failed to initialize NestJS app:', error);
+      console.error('Error details:', {
+        message: error.message,
+        code: error.code,
+        stack: error.stack
+      });
       throw error;
     }
   }
@@ -38,6 +51,7 @@ module.exports = async (req, res) => {
     res.status(500).json({ 
       error: 'Internal server error',
       message: error.message,
+      code: error.code,
       timestamp: new Date().toISOString()
     });
   }
