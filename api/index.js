@@ -1,18 +1,12 @@
 const { NestFactory } = require('@nestjs/core');
 
-// Import the compiled NestJS application
+// Import the compiled module with error handling
 let AppModule;
 try {
   AppModule = require('../dist/app/app.module').AppModule;
 } catch (error) {
-  console.error('Failed to import AppModule from dist:', error);
-  // Fallback: try to import from src (for development)
-  try {
-    AppModule = require('../src/app/app.module').AppModule;
-  } catch (error2) {
-    console.error('Failed to import AppModule from src:', error2);
-    throw new Error('Could not import AppModule from any location');
-  }
+  console.error('Failed to import AppModule:', error);
+  throw error;
 }
 
 let app;
