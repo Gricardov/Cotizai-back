@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "private": true,
   "scripts": {
-    "build": "nest build",
+    "build": "tsc --project tsconfig.app.json",
     "build:vercel": "tsc --project tsconfig.vercel.json --noEmitOnError false --skipLibCheck true || echo 'Build completed with warnings'",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",

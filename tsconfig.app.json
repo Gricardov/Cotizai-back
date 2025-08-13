@@ -1,12 +1,10 @@
 {
-  "incremental": false,
   "noEmitOnError": false,
   "compilerOptions": {
     "outDir": "./dist",
     "types": ["node"],
     "rootDir": "./src",
     "noEmitOnError": false,
-    "tsBuildInfoFile": "dist/tsconfig.app.tsbuildinfo",
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "target": "es2021",
