@@ -35,6 +35,12 @@ GOOGLE_AI_API_KEY=your-google-ai-api-key
 
 ## Troubleshooting
 
+### Path-to-Regexp Error
+If you get "TypeError: Missing parameter name at 1: https://git.new/pathToRegexpError":
+1. **Check Route Patterns**: Ensure no problematic wildcard patterns like `*` are used
+2. **Use Proper Patterns**: Use `/*` instead of `*` for catch-all routes
+3. **Remove Problematic Routes**: Consider removing catch-all routes if not needed
+
 ### Module Resolution Error
 If you get "Cannot find module" errors:
 1. **Check Dependencies**: Ensure all required packages are in package.json
@@ -66,4 +72,5 @@ This deployment uses:
 - **Express.js** for the API framework
 - **CORS** for cross-origin requests
 - **Vercel Functions** for serverless deployment
-- **No TypeScript compilation** required for deployment 
+- **No TypeScript compilation** required for deployment
+- **Simplified routing** to avoid path-to-regexp issues 
