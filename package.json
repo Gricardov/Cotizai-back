@@ -67,6 +67,7 @@
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
+    "@nestjs/cli": "^11.0.10",
     "@nestjs/config": "^4.0.2",
     "@nestjs/typeorm": "^11.0.0",
     "@types/bcryptjs": "^2.4.6",
